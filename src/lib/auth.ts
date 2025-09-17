@@ -1,0 +1,83 @@
+import { NextAuthOptions } from "next-auth";
+import { UpstashRedisAdapter } from "@next-auth/upstash-redis-adapter";
+import Github from "next-auth/providers/github";
+import { db } from "./db";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
+
+ function getGoogleCreds():{clientId :string, clientSecret:string}{
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+
+    if(!clientId || clientId.length === 0){
+        throw new Error("Missing GOOGLE_CLIENT_ID")
+    }
+    if(!clientSecret || clientSecret.length === 0){
+        throw new Error("Missing GOOGLE_CLIENT_SECRET")
+    }
+    return {clientId, clientSecret}
+ }
+  
+ function getGithubCreds():{clientId :string, clientSecret:string} {
+    const  clientId = process.env.GITHUB_CLIENT_ID
+     const clientSecret = process.env.GITHUB_CLIENT_SECRET
+     
+    if(!clientId || clientId.length === 0 ){
+        throw new Error("Missing GITHUB_CLIENT_ID")
+    }
+    if(!clientSecret || clientSecret.length === 0 ){
+        throw new Error("Missing GITHUB_CLIENT_SECRET")
+    } 
+    return {clientId, clientSecret}
+
+ }
+
+
+ 
+export const authOptions:NextAuthOptions ={
+    adapter :  UpstashRedisAdapter(db),
+    session:{
+        strategy:"jwt"
+    },
+    pages:{
+        signIn :'/login'
+    },
+    providers:[
+        GoogleProvider({
+             clientId: getGoogleCreds().clientId,
+            clientSecret: getGoogleCreds().clientSecret,
+        }),
+        GitHubProvider({
+            clientId:getGithubCreds().clientId,
+            clientSecret:getGithubCreds().clientSecret
+        }),
+    ],
+    callbacks:{
+         async jwt({token , user}){
+            const dbUser = (await db.get(`user:${token.id}`)) as User | null 
+
+            if(!dbUser){
+                token.id = user!.id
+                return token
+            }
+            return {
+                id:dbUser.id,
+                name:dbUser.name,
+                image:dbUser.image,
+                email:dbUser.email
+            }
+         },
+         async session ({session, token}){
+            if(token) {
+                session.user.id = token.id
+                session.user.name = token.name
+                session.user.email = token.email
+                session.user.image = token.image
+            }
+            return session 
+         },
+         redirect(){
+            return "/dashboard"
+         }
+    }
+}
