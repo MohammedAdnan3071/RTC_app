@@ -1,7 +1,11 @@
-import Image from "next/image";
+import { db } from "@/lib/db";
 
-export default function Home() {
-  return (
-    <div className="text-white"> hello world</div>
-  );
+
+export default async function Home(){
+     
+
+    return <>
+     <div className="text-red-500"> hello world</div>
+    
+    </>
 }
