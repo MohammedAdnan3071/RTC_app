@@ -5,7 +5,7 @@ export default async function Home(){
      
 
     return <>
-     <Button variant={"default"}>Hello </Button>
+     <Button variant={"ghost"}>Hello </Button>
     
     </>
 }

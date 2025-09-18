@@ -18,19 +18,7 @@ import GitHubProvider from "next-auth/providers/github";
     return {clientId, clientSecret}
  }
   
- function getGithubCreds():{clientId :string, clientSecret:string} {
-    const  clientId = process.env.GITHUB_CLIENT_ID
-     const clientSecret = process.env.GITHUB_CLIENT_SECRET
-     
-    if(!clientId || clientId.length === 0 ){
-        throw new Error("Missing GITHUB_CLIENT_ID")
-    }
-    if(!clientSecret || clientSecret.length === 0 ){
-        throw new Error("Missing GITHUB_CLIENT_SECRET")
-    } 
-    return {clientId, clientSecret}
-
- }
+ 
 
 
  
@@ -46,10 +34,6 @@ export const authOptions:NextAuthOptions ={
         GoogleProvider({
              clientId: getGoogleCreds().clientId,
             clientSecret: getGoogleCreds().clientSecret,
-        }),
-        GitHubProvider({
-            clientId:getGithubCreds().clientId,
-            clientSecret:getGithubCreds().clientSecret
         }),
     ],
     callbacks:{
@@ -72,7 +56,7 @@ export const authOptions:NextAuthOptions ={
                 session.user.id = token.id
                 session.user.name = token.name
                 session.user.email = token.email
-                session.user.image = token.image
+                session.user.image = typeof token.image === "string" ? token.image : null
             }
             return session 
          },
